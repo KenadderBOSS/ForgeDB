@@ -1,28 +1,9 @@
 import NextAuth, { AuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { User } from "next-auth"
-import fs from 'fs/promises'
-import path from 'path'
+import dbConnect from "@/lib/mongodb"
+import UserModel from "@/models/User"
 import { verifyPassword } from "@/lib/password"
-
-interface StoredUser {
-  id: string;
-  email: string;
-  password: string;
-  role: 'user' | 'admin';
-  createdAt: string;
-}
-
-const USERS_FILE = path.join(process.cwd(), 'data/users.json')
-
-async function getUsers(): Promise<StoredUser[]> {
-  try {
-    const data = await fs.readFile(USERS_FILE, 'utf-8')
-    return JSON.parse(data)
-  } catch (error) {
-    return []
-  }
-}
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -38,21 +19,20 @@ export const authOptions: AuthOptions = {
           throw new Error('Email y contraseña son requeridos')
         }
 
-        const users = await getUsers()
-        const user = users.find(u => u.email === credentials.email)
+        await dbConnect();
 
+        const user = await UserModel.findOne({ email: credentials.email });
         if (!user) {
           throw new Error('Usuario no encontrado')
         }
 
         const isValid = await verifyPassword(credentials.password, user.password)
-
         if (!isValid) {
           throw new Error('Contraseña incorrecta')
         }
 
         return {
-          id: user.id,
+          id: user._id.toString(),
           email: user.email,
           name: user.email.split('@')[0],
           image: `/api/avatar/${user.email}`,

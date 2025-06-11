@@ -182,7 +182,7 @@ export default function ReviewCard({ review, showModName, onReactionChange }: Re
               className="flex items-center space-x-2"
             >
               <span>❤️</span>
-              <span>{currentReactions.likes}</span>
+              <span>{currentReactions?.likes ?? 0}</span>
             </Button>
             <Button
               variant={userReaction === 'dislike' ? "default" : "outline"}
@@ -191,7 +191,7 @@ export default function ReviewCard({ review, showModName, onReactionChange }: Re
               className="flex items-center space-x-2"
             >
               <span>-</span>
-              <span>{currentReactions.dislikes}</span>
+              <span>{currentReactions?.dislikes ?? 0}</span>
             </Button>
           </div>
         </div>
