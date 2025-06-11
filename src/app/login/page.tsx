@@ -27,10 +27,10 @@ export default function LoginPage() {
     setNum2(newNum2);
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setLoading(true)
+ const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
     // Validate captcha
     const isCaptchaValid = validateCaptcha(captchaAnswer, num1, num2);
@@ -48,7 +48,7 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError("Credenciales inválidas. Por favor, intenta nuevamente.");
+        setError(result.error);
       } else {
         router.push("/");
         router.refresh();
@@ -58,7 +58,7 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -77,6 +77,7 @@ export default function LoginPage() {
               id="email"
               type="email"
               required
+              autoComplete="username"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               placeholder="tu@email.com"
@@ -89,6 +90,7 @@ export default function LoginPage() {
               id="password"
               type="password"
               required
+              autoComplete="current-password"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             />

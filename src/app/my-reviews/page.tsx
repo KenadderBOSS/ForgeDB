@@ -7,12 +7,15 @@ import ReviewCard from "@/components/ReviewCard"
 import Link from "next/link"
 
 // Mock data - Replace with actual API call
-const MOCK_REVIEWS = [
+import type { Review } from "@/types/review"
+
+const MOCK_REVIEWS: Review[] = [
   {
     id: "1",
+    userId: "user123",
     user: {
       name: "MinecraftPro",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=1",
+      avatar: "/vercel.svg",
       badges: ["Experto", "100+ Reseñas"],
       reviewCount: 120,
     },
@@ -26,11 +29,18 @@ const MOCK_REVIEWS = [
       gpu: "NVIDIA RTX 3070",
       ram: "16GB",
     },
-    issueType: "client",
-    conflictingMods: ["OptiFine", "Better FPS"],
+    issueType: "client" as const,
+    conflictingMods: [
+      { name: "OptiFine", causesCrash: false },
+      { name: "Better FPS", causesCrash: false }
+    ],
     description: "Excelente mod, pero tiene algunos problemas de rendimiento cuando se usa junto con OptiFine. La interfaz a veces se congela al buscar items.",
-    screenshot: "https://images.pexels.com/photos/minecraft-sample/screenshot1.jpg",
-    likes: 45,
+    screenshot: undefined,
+    reactions: {
+      likes: 45,
+      dislikes: 0
+    },
+    userReactions: {},
     createdAt: "2024-01-15T10:30:00Z",
   },
   // Add more mock reviews as needed

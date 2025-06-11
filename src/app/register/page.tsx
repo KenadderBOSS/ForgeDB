@@ -31,15 +31,32 @@ export default function RegisterPage() {
     setError("")
     setLoading(true)
 
-    // TODO: Implement actual register logic here
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const expectedAnswer = num1 + num2;
       
-      // For demo purposes, just redirect to home
-      router.push("/")
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          captchaAnswer: captchaAnswer,
+          expectedAnswer: expectedAnswer,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al registrarse');
+      }
+
+      // Registration successful, redirect to login
+      router.push("/login")
     } catch (err) {
-      setError("Error al registrarse. Por favor, intenta nuevamente.")
+      setError(err instanceof Error ? err.message : "Error al registrarse. Por favor, intenta nuevamente.")
     } finally {
       setLoading(false)
     }
@@ -62,6 +79,7 @@ export default function RegisterPage() {
               id="email"
               type="email"
               required
+              autoComplete="username"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               placeholder="tu@email.com"
@@ -74,6 +92,7 @@ export default function RegisterPage() {
               id="password"
               type="password"
               required
+              autoComplete="new-password"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             />

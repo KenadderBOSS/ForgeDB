@@ -83,13 +83,10 @@ export default function ReviewCard({ review, showModName, onReactionChange }: Re
       )}
       <div className="flex items-start justify-between">
         <div className="flex items-center space-x-4">
-          <Avatar className="w-12 h-12">
-            <Image
-              src={review.user.avatar}
-              alt={review.user.name}
-              width={48}
-              height={48}
-            />
+          <Avatar className="w-12 h-12 bg-muted">
+            <div className="w-full h-full flex items-center justify-center text-lg font-semibold">
+              {review.user.name[0].toUpperCase()}
+            </div>
           </Avatar>
           <div>
             <h3 className="font-medium">{review.user.name}</h3>
@@ -171,7 +168,7 @@ export default function ReviewCard({ review, showModName, onReactionChange }: Re
               alt="Screenshot"
               width={600}
               height={400}
-              className="rounded-md"
+              className="rounded-md w-full h-auto object-cover"
             />
           </div>
         )}

@@ -1,6 +1,28 @@
 import NextAuth, { AuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { User } from "next-auth"
+import fs from 'fs/promises'
+import path from 'path'
+import { verifyPassword } from "@/lib/password"
+
+interface StoredUser {
+  id: string;
+  email: string;
+  password: string;
+  role: 'user' | 'admin';
+  createdAt: string;
+}
+
+const USERS_FILE = path.join(process.cwd(), 'data/users.json')
+
+async function getUsers(): Promise<StoredUser[]> {
+  try {
+    const data = await fs.readFile(USERS_FILE, 'utf-8')
+    return JSON.parse(data)
+  } catch (error) {
+    return []
+  }
+}
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -12,17 +34,30 @@ export const authOptions: AuthOptions = {
         captcha: { label: "Captcha", type: "text" }
       },
       async authorize(credentials): Promise<User | null> {
-        // TODO: Replace with actual authentication logic
-        if (credentials?.email === "kenadderboss4@gmail.com" && credentials?.password === "convento30.") {
-          return {
-            id: "1",
-            name: "Admin User",
-            email: "kenadderboss4@gmail.com",
-            image: "https://api.dicebear.com/7.x/avataaars/svg?seed=admin",
-            isAdmin: true
-          }
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error('Email y contraseña son requeridos')
         }
-        return null
+
+        const users = await getUsers()
+        const user = users.find(u => u.email === credentials.email)
+
+        if (!user) {
+          throw new Error('Usuario no encontrado')
+        }
+
+        const isValid = await verifyPassword(credentials.password, user.password)
+
+        if (!isValid) {
+          throw new Error('Contraseña incorrecta')
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.email.split('@')[0],
+          image: `/api/avatar/${user.email}`,
+          isAdmin: user.role === 'admin'
+        }
       }
     })
   ],

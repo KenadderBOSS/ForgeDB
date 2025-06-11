@@ -37,7 +37,7 @@ export default function Captcha({ onChange, onNumbersChange }: CaptchaProps) {
       <div className="flex items-center gap-2">
         <span className="text-lg">{num1} + {num2} = </span>
         <Input
-          type="number"
+          type="text"
           value={userAnswer}
           onChange={(e) => handleChange(e.target.value)}
           className="w-20"

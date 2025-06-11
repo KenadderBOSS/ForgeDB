@@ -4,6 +4,23 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
+        hostname: 'api.dicebear.com',
+        pathname: '/7.x/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.pexels.com',
+        pathname: '/**',
+      }
+    ],
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
         hostname: 'images.pexels.com',
         pathname: '/photos/**',
       },
