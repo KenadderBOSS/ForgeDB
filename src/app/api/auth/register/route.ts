@@ -1,7 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { hashPassword } from '@/lib/password';
-import dbConnect from '@/lib/mongodb';
-import User from '@/models/User';
+import { NextRequest, NextResponse } from "next/server";
+import { hashPassword } from "@/lib/password";
+import dbConnect from "@/lib/mongodb";
+import User from "@/models/User";
+import { sendVerificationCode } from "@/lib/sendEmail";
+
+function generateCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,56 +14,42 @@ export async function POST(request: NextRequest) {
 
     const { email, password, captchaAnswer, expectedAnswer } = await request.json();
 
-    // Validate input
     if (!email || !password || !captchaAnswer) {
-      return NextResponse.json(
-        { error: 'Todos los campos son requeridos' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Todos los campos son requeridos" }, { status: 400 });
     }
 
-    // Validate captcha
     const parsedAnswer = parseInt(captchaAnswer, 10);
     if (isNaN(parsedAnswer) || parsedAnswer !== expectedAnswer) {
-      return NextResponse.json(
-        { error: 'Captcha incorrecto' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Captcha incorrecto" }, { status: 400 });
     }
 
-    // Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return NextResponse.json(
-        { error: 'El email ya está registrado' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "El email ya está registrado" }, { status: 400 });
     }
 
-    // Hash password and create user
     const hashedPassword = await hashPassword(password);
+    const verificationCode = generateCode();
+
     const newUser = new User({
       email,
       password: hashedPassword,
-      role: 'user',
+      role: "user",
+      isVerified: false,
+      verificationCode,
+      verificationCodeExpires: Date.now() + 10 * 60 * 1000, // 10 minutos en ms
     });
 
     await newUser.save();
 
-    // Remove password field and return user data
-    const userWithoutPassword = {
-      id: newUser._id,
-      email: newUser.email,
-      role: newUser.role,
-      createdAt: newUser.createdAt,
-    };
+    await sendVerificationCode(email, verificationCode);
 
-    return NextResponse.json(userWithoutPassword, { status: 201 });
-  } catch (error) {
-    console.error('Registration error:', error);
     return NextResponse.json(
-      { error: 'Error al registrar usuario' },
-      { status: 500 }
+      { message: "Usuario registrado. Revisa tu correo para el código de verificación." },
+      { status: 201 }
     );
+  } catch (error) {
+    console.error("Registration error:", error);
+    return NextResponse.json({ error: "Error al registrar usuario" }, { status: 500 });
   }
 }

@@ -1,128 +1,87 @@
-"use client"
+"use client";
 
-import { useState, useCallback } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card } from "@/components/ui/card"
-import Captcha from "@/components/Captcha"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
 
-export default function RegisterPage() {
-  const router = useRouter()
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  })
-  const [captchaAnswer, setCaptchaAnswer] = useState("")
-  const [num1, setNum1] = useState(0);
-  const [num2, setNum2] = useState(0);
-  const [error, setError] = useState("")
-  const [loading, setLoading] = useState(false)
+interface VerifyPageProps {
+  searchParams?: {
+    email?: string;
+  };
+}
 
-  const handleNumbersChange = useCallback((newNum1: number, newNum2: number) => {
-    setNum1(newNum1);
-    setNum2(newNum2);
-  }, []);
+export default function VerifyPage({ searchParams }: VerifyPageProps) {
+  const router = useRouter();
+  const [code, setCode] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const email = searchParams?.email || "";
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setLoading(true)
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
-      const expectedAnswer = num1 + num2;
-      
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
+      const response = await fetch("/api/auth/verify", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          captchaAnswer: captchaAnswer,
-          expectedAnswer: expectedAnswer,
-        }),
+        body: JSON.stringify({ email, code }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Error al registrarse');
+        throw new Error(data.error || "Código incorrecto");
       }
 
-      // Registration successful, redirect to login
-      router.push("/login")
+      // Código correcto, redirige a login o página principal
+      router.push("/login");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al registrarse. Por favor, intenta nuevamente.")
+      setError(err instanceof Error ? err.message : "Error verificando código");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <main className="container mx-auto px-4 py-8">
       <Card className="max-w-md mx-auto p-6">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold">Registrarse</h1>
+          <h1 className="text-2xl font-bold">Verificación de cuenta</h1>
           <p className="text-muted-foreground">
-            Crea una cuenta para dejar reseñas
+            Ingresa el código de 6 dígitos enviado a <strong>{email}</strong>
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="code">Código de verificación</Label>
             <Input
-              id="email"
-              type="email"
+              id="code"
+              type="text"
+              maxLength={6}
               required
-              autoComplete="username"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="tu@email.com"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="123456"
+              pattern="\d{6}"
+              title="Ingresa un código de 6 dígitos"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Contraseña</Label>
-            <Input
-              id="password"
-              type="password"
-              required
-              autoComplete="new-password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            />
-          </div>
+          {error && <p className="text-sm text-red-500">{error}</p>}
 
-          <Captcha
-            onChange={setCaptchaAnswer}
-            onNumbersChange={handleNumbersChange}
-          />
-
-          {error && (
-            <p className="text-sm text-red-500">{error}</p>
-          )}
-
-          <Button 
-            type="submit" 
-            className="w-full"
-            disabled={loading}
-          >
-            {loading ? "Registrarse..." : "Registrarse"}
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Verificando..." : "Verificar"}
           </Button>
-
-          <p className="text-center text-sm text-muted-foreground">
-            ¿Ya tienes una cuenta?{" "}
-            <Link href="/login" className="text-primary hover:underline">
-              Inicia Sesión aquí
-            </Link>
-          </p>
         </form>
       </Card>
     </main>
-  )
+  );
 }
