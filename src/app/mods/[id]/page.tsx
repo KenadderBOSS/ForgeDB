@@ -16,6 +16,16 @@ interface ReviewCardProps {
 export default function ReviewCard({ review, showModName }: ReviewCardProps) {
   const { data: session } = useSession()
 
+  if (!review.user) {
+    return (
+      <Card className="p-6">
+        <p className="text-sm text-muted-foreground">
+          Esta reseña fue enviada por un usuario que ya no existe.
+        </p>
+      </Card>
+    )
+  }
+
   const getIssueTypeColor = (type: 'client' | 'server' | 'both') => {
     switch (type) {
       case "client":

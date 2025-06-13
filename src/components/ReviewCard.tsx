@@ -16,36 +16,31 @@ interface ReviewCardProps {
 export default function ReviewCard({ review, showModName }: ReviewCardProps) {
   const { data: session } = useSession()
 
-  // Validación defensiva: verificar que review y review.user existen
   if (!review || !review.user) {
-    console.error('ReviewCard: review or review.user is undefined', review)
     return (
       <Card className="p-6">
-        <p className="text-red-500">Error: Datos de review incompletos</p>
+        <p className="text-sm text-muted-foreground">
+          Esta reseña fue enviada por un usuario que ya no existe.
+        </p>
       </Card>
     )
   }
 
   const getIssueTypeColor = (type: 'client' | 'server' | 'both') => {
     switch (type) {
-      case "client":
-        return "bg-yellow-500"
-      case "server":
-        return "bg-blue-500"
-      case "both":
-        return "bg-red-500"
-      default:
-        return "bg-gray-500"
+      case "client": return "bg-yellow-500"
+      case "server": return "bg-blue-500"
+      case "both": return "bg-red-500"
+      default: return "bg-gray-500"
     }
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-ES", {
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString("es-ES", {
       year: "numeric",
       month: "long",
       day: "numeric"
     })
-  }
 
   return (
     <Card className="p-6 space-y-4">
@@ -65,22 +60,21 @@ export default function ReviewCard({ review, showModName }: ReviewCardProps) {
             {review.user.image ? (
               <Image
                 src={review.user.image}
-                alt={review.user.name || 'Usuario'}
+                alt={review.user.name}
                 width={48}
                 height={48}
                 className="rounded-full object-cover w-full h-full"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-lg font-semibold">
-                {review.user.name ? review.user.name[0].toUpperCase() : '?'}
+                {review.user.name?.[0]?.toUpperCase() ?? "?"}
               </div>
             )}
           </Avatar>
-
           <div>
-            <h3 className="font-medium">{review.user.name || 'Usuario anónimo'}</h3>
+            <h3 className="font-medium">{review.user.name}</h3>
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <span>{review.user.reviewCount || 0} reseñas</span>
+              <span>{review.user.reviewCount} reseñas</span>
               <span>•</span>
               <span>{formatDate(review.createdAt)}</span>
             </div>
@@ -88,10 +82,8 @@ export default function ReviewCard({ review, showModName }: ReviewCardProps) {
         </div>
         <div className="flex flex-wrap gap-2">
           {review.user.badges?.map((badge, index) => (
-            <Badge key={index} variant="secondary">
-              {badge}
-            </Badge>
-          )) || null}
+            <Badge key={index} variant="secondary">{badge}</Badge>
+          ))}
           {review.verified && (
             <Badge variant="default" className="bg-green-500">
               Verificado
@@ -104,17 +96,17 @@ export default function ReviewCard({ review, showModName }: ReviewCardProps) {
         <div>
           <h4 className="text-sm font-medium mb-2">Versiones</h4>
           <div className="space-y-1 text-sm">
-            <p>Minecraft: {review.minecraftVersion || 'N/A'}</p>
-            <p>Forge: {review.forgeVersion || 'N/A'}</p>
+            <p>Minecraft: {review.minecraftVersion}</p>
+            <p>Forge: {review.forgeVersion}</p>
           </div>
         </div>
         <div>
           <h4 className="text-sm font-medium mb-2">Especificaciones</h4>
           <div className="space-y-1 text-sm">
-            <p>SO: {review.systemSpecs?.os || 'N/A'}</p>
-            <p>CPU: {review.systemSpecs?.cpu || 'N/A'}</p>
-            <p>GPU: {review.systemSpecs?.gpu || 'N/A'}</p>
-            <p>RAM: {review.systemSpecs?.ram || 'N/A'}</p>
+            <p>SO: {review.systemSpecs.os}</p>
+            <p>CPU: {review.systemSpecs.cpu}</p>
+            <p>GPU: {review.systemSpecs.gpu}</p>
+            <p>RAM: {review.systemSpecs.ram}</p>
           </div>
         </div>
       </div>
@@ -122,12 +114,15 @@ export default function ReviewCard({ review, showModName }: ReviewCardProps) {
       <div>
         <div className="flex items-center space-x-2 mb-2">
           <Badge className={getIssueTypeColor(review.issueType)}>
-            {review.issueType === "client" ? "Client-side" :
-              review.issueType === "server" ? "Server-side" : "Ambos"}
+            {review.issueType === "client"
+              ? "Client-side"
+              : review.issueType === "server"
+              ? "Server-side"
+              : "Ambos"}
           </Badge>
         </div>
 
-        {review.conflictingMods?.length > 0 && (
+        {review.conflictingMods.length > 0 && (
           <div className="mb-4">
             <h4 className="text-sm font-medium mb-2">Mods en Conflicto:</h4>
             <div className="flex flex-wrap gap-2">
