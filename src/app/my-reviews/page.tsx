@@ -15,7 +15,7 @@ const MOCK_REVIEWS: Review[] = [
     userId: "user123",
     user: {
       name: "MinecraftPro",
-      avatar: "/vercel.svg",
+      image: "/vercel.svg",
       badges: ["Experto", "100+ Reseñas"],
       reviewCount: 120,
     },
@@ -40,7 +40,6 @@ const MOCK_REVIEWS: Review[] = [
       likes: 45,
       dislikes: 0
     },
-    userReactions: {},
     createdAt: "2024-01-15T10:30:00Z",
   },
   // Add more mock reviews as needed

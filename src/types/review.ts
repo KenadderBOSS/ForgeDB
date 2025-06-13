@@ -7,10 +7,11 @@ export interface SystemSpecs {
 
 export interface User {
   name: string;
-  avatar: string;
+  image: string; // ← este nombre lo usa ReviewCard
   badges: string[];
   reviewCount: number;
 }
+
 
 export interface Review {
   id: string;
@@ -32,9 +33,7 @@ export interface Review {
     likes: number;
     dislikes: number;
   };
-  userReactions: {
-    [userId: string]: 'like' | 'dislike' | null;
-  };
+  
   screenshot?: string;
   verified?: boolean;
 }

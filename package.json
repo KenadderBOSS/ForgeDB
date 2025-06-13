@@ -10,6 +10,7 @@
     "seed:admin": "node scripts/seed-admin.js"
   },
   "dependencies": {
+    "@hcaptcha/react-hcaptcha": "^1.12.0",
     "@hookform/resolvers": "^5.1.1",
     "@radix-ui/react-accordion": "^1.2.10",
     "@radix-ui/react-alert-dialog": "^1.1.13",
@@ -38,7 +39,6 @@
     "@radix-ui/react-toggle-group": "^1.1.9",
     "@radix-ui/react-tooltip": "^1.2.6",
     "@sendgrid/mail": "^8.1.5",
-    "@types/bcryptjs": "^3.0.0",
     "@types/mongoose": "^5.11.97",
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
@@ -49,7 +49,10 @@
     "embla-carousel-react": "^8.6.0",
     "form-data": "^4.0.3",
     "input-otp": "^1.4.2",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.509.0",
+    "mailgun": "^0.5.0",
+    "mailgun-js": "^0.22.0",
     "mailgun.js": "^12.0.2",
     "mongodb": "^6.17.0",
     "mongoose": "^8.15.1",
@@ -70,6 +73,9 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/mailgun-js": "^0.22.18",
     "@types/node": "^20.11.0",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",

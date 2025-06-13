@@ -24,19 +24,70 @@ async function readUsersFile() {
   }
 }
 
-// PUT endpoint to handle reactions (likes/dislikes)
+// NUEVO: GET endpoint para obtener reviews con datos de usuario
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const reviews = await readReviewsFile();
+    const users = await readUsersFile();
+    
+    // Encontrar la review específica
+    const review = reviews.find((r: any) => r.id === params.id);
+    
+    if (!review) {
+      return NextResponse.json(
+        { error: 'Reseña no encontrada' },
+        { status: 404 }
+      );
+    }
+
+    // Combinar datos de review con datos de usuario
+    const user = users.find((u: any) => u.id === review.userId);
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Usuario no encontrado para esta reseña' },
+        { status: 404 }
+      );
+    }
+
+    const reviewWithUser = {
+      ...review,
+      user: {
+        id: user.id,
+        name: user.name,
+        image: user.image,
+        reviewCount: user.reviewCount || 0,
+        badges: user.badges || []
+      }
+    };
+
+    return NextResponse.json(reviewWithUser);
+  } catch (error) {
+    console.error('Error en GET review:', error);
+    return NextResponse.json(
+      { error: 'Error al obtener la reseña' },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT endpoint simplified, no reactions handling
 export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession();
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
     const { type } = await request.json();
+    // Validar tipo pero sin hacer nada con él
     if (!['like', 'dislike'].includes(type)) {
       return NextResponse.json(
         { error: 'Tipo de reacción inválido' },
@@ -45,6 +96,7 @@ export async function PUT(
     }
 
     const reviews = await readReviewsFile();
+    const users = await readUsersFile();
     const reviewIndex = reviews.findIndex((r: any) => r.id === params.id);
 
     if (reviewIndex === -1) {
@@ -54,47 +106,42 @@ export async function PUT(
       );
     }
 
+    // Combinar con datos de usuario para la respuesta
     const review = reviews[reviewIndex];
-    const userId = session.user.id;
-    const currentReaction = review.userReactions[userId];
-
-    // Remove previous reaction if exists
-    if (currentReaction) {
-      review.reactions[`${currentReaction}s`]--;
-    }
-
-    // Add new reaction if different from current
-    if (!currentReaction || currentReaction !== type) {
-      review.reactions[`${type}s`]++;
-      review.userReactions[userId] = type;
-    } else {
-      // If same reaction, remove it
-      delete review.userReactions[userId];
-    }
-
-    await fs.writeFile(reviewsFilePath, JSON.stringify(reviews, null, 2));
+    const user = users.find((u: any) => u.id === review.userId);
+    
+    const reviewWithUser = {
+      ...review,
+      user: user ? {
+        id: user.id,
+        name: user.name,
+        image: user.image,
+        reviewCount: user.reviewCount || 0,
+        badges: user.badges || []
+      } : null
+    };
 
     return NextResponse.json({
-      message: 'Reacción actualizada',
-      review
+      message: 'Reacción recibida pero no almacenada',
+      review: reviewWithUser
     });
   } catch (error) {
-    console.error('Error updating review reaction:', error);
+    console.error('Error en PUT review:', error);
     return NextResponse.json(
-      { error: 'Error al actualizar la reacción' },
+      { error: 'Error al procesar la solicitud' },
       { status: 500 }
     );
   }
 }
 
-// DELETE endpoint to handle review deletion (for admins)
+// DELETE endpoint sin cambios
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession();
-    
+
     if (!session?.user?.isAdmin) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }

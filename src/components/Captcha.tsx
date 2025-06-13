@@ -10,45 +10,50 @@ interface CaptchaProps {
 }
 
 export default function Captcha({ onChange, onNumbersChange }: CaptchaProps) {
-  const [num1, setNum1] = useState(0)
-  const [num2, setNum2] = useState(0)
+  const [num1, setNum1] = useState<number>(() => Math.floor(Math.random() * 50) + 1)
+  const [num2, setNum2] = useState<number>(() => Math.floor(Math.random() * 50) + 1)
   const [userAnswer, setUserAnswer] = useState("")
-
-  const generateNumbers = () => {
-    const newNum1 = Math.floor(Math.random() * 10);
-    const newNum2 = Math.floor(Math.random() * 10);
-    setNum1(newNum1);
-    setNum2(newNum2);
-    onNumbersChange(newNum1, newNum2);
-  }
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    generateNumbers()
-  }, [onNumbersChange])
+    onNumbersChange(num1, num2)
+  }, [num1, num2, onNumbersChange])
 
   const handleChange = (value: string) => {
     setUserAnswer(value)
     onChange(value)
+
+    // Validación instantánea
+    if (!/^\d+$/.test(value)) {
+      setError("Solo se permiten números")
+    } else {
+      setError(null)
+    }
   }
 
   return (
     <div className="space-y-2">
-      <Label>Verificación de Seguridad</Label>
+      <Label>Verificación de seguridad</Label>
       <div className="flex items-center gap-2">
-        <span className="text-lg">{num1} + {num2} = </span>
+        <span className="text-lg select-none">{num1} + {num2} =</span>
         <Input
           type="text"
           value={userAnswer}
           onChange={(e) => handleChange(e.target.value)}
-          className="w-20"
-          placeholder="?"
+          className="w-24"
+          placeholder="Respuesta"
           required
+          inputMode="numeric"
+          pattern="\d*"
         />
       </div>
+      {error && <p className="text-sm text-red-500">{error}</p>}
     </div>
   )
 }
 
 export const validateCaptcha = (answer: string, num1: number, num2: number): boolean => {
-  return parseInt(answer) === (num1 + num2);
-};
+  const parsed = parseInt(answer)
+  if (isNaN(parsed)) return false
+  return parsed === (num1 + num2)
+}

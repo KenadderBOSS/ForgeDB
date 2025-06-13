@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { signIn } from "next-auth/react"
@@ -8,57 +8,48 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
-import Captcha, { validateCaptcha } from "@/components/Captcha"
+import HCaptcha from "@hcaptcha/react-hcaptcha"
 
 export default function LoginPage() {
   const router = useRouter()
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  })
-  const [captchaAnswer, setCaptchaAnswer] = useState("")
-  const [num1, setNum1] = useState(0);
-  const [num2, setNum2] = useState(0);
+  const [formData, setFormData] = useState({ email: "", password: "" })
+  const [captchaToken, setCaptchaToken] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
-  const handleNumbersChange = useCallback((newNum1: number, newNum2: number) => {
-    setNum1(newNum1);
-    setNum2(newNum2);
-  }, []);
+  const captchaRef = useRef<HCaptcha>(null)
 
- const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    setLoading(true)
 
-    // Validate captcha
-    const isCaptchaValid = validateCaptcha(captchaAnswer, num1, num2);
-    if (!isCaptchaValid) {
-      setError("Verificación de seguridad incorrecta");
-      setLoading(false);
-      return;
+    if (!captchaToken) {
+      setError("Por favor completa el captcha")
+      setLoading(false)
+      return
     }
 
     try {
+      // Aquí podrías verificar hCaptcha en un endpoint si quieres seguridad adicional
       const result = await signIn("credentials", {
         email: formData.email,
         password: formData.password,
         redirect: false,
-      });
+      })
 
       if (result?.error) {
-        setError(result.error);
+        setError(result.error)
       } else {
-        router.push("/");
-        router.refresh();
+        router.push("/")
+        router.refresh()
       }
     } catch (err) {
-      setError("Error al iniciar sesión. Por favor, intenta nuevamente.");
+      setError("Error al iniciar sesión. Por favor, intenta nuevamente.")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -79,7 +70,9 @@ export default function LoginPage() {
               required
               autoComplete="username"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
               placeholder="tu@email.com"
             />
           </div>
@@ -92,24 +85,23 @@ export default function LoginPage() {
               required
               autoComplete="current-password"
               value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
             />
           </div>
 
-          <Captcha
-            onChange={setCaptchaAnswer}
-            onNumbersChange={handleNumbersChange}
-          />
+          <div>
+            <HCaptcha
+              sitekey="e9089450-c8c4-4daa-8844-973667befb7e" // ✅ tu sitekey
+              onVerify={(token) => setCaptchaToken(token)}
+              ref={captchaRef}
+            />
+          </div>
 
-          {error && (
-            <p className="text-sm text-red-500">{error}</p>
-          )}
+          {error && <p className="text-sm text-red-500">{error}</p>}
 
-          <Button 
-            type="submit" 
-            className="w-full"
-            disabled={loading}
-          >
+          <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
           </Button>
 

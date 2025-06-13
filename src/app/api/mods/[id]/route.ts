@@ -10,7 +10,8 @@ async function readModsFile() {
     const data = await fs.readFile(modsFilePath, 'utf-8');
     return JSON.parse(data);
   } catch (error) {
-    return [];
+    console.error('[readModsFile] Error leyendo mods.json:', error);
+    throw new Error('No se pudo leer el archivo de mods');
   }
 }
 
@@ -19,7 +20,8 @@ async function readReviewsFile() {
     const data = await fs.readFile(reviewsFilePath, 'utf-8');
     return JSON.parse(data);
   } catch (error) {
-    return [];
+    console.error('[readReviewsFile] Error leyendo reviews.json:', error);
+    throw new Error('No se pudo leer el archivo de reviews');
   }
 }
 
@@ -30,9 +32,25 @@ export async function GET(
   try {
     const mods = await readModsFile();
     const reviews = await readReviewsFile();
-    
+
+    if (!Array.isArray(mods)) {
+      console.error('[GET] mods.json no es un array');
+      return NextResponse.json(
+        { error: 'Archivo de mods corrupto o inválido' },
+        { status: 500 }
+      );
+    }
+    if (!Array.isArray(reviews)) {
+      console.error('[GET] reviews.json no es un array');
+      return NextResponse.json(
+        { error: 'Archivo de reviews corrupto o inválido' },
+        { status: 500 }
+      );
+    }
+
     const mod = mods.find((m: any) => m.id === params.id);
     if (!mod) {
+      console.warn(`[GET] Mod con id ${params.id} no encontrado`);
       return NextResponse.json(
         { error: 'Mod no encontrado' },
         { status: 404 }
@@ -44,22 +62,26 @@ export async function GET(
 
     // Calculate statistics
     const issueTypes = modReviews.reduce((acc: any, review: any) => {
-      acc[review.issueType] = (acc[review.issueType] || 0) + 1;
+      if (review && typeof review.issueType === 'string') {
+        acc[review.issueType] = (acc[review.issueType] || 0) + 1;
+      }
       return acc;
     }, {});
 
     const totalReviews = modReviews.length;
     const issueStats = {
-      client: Math.round((issueTypes.client || 0) / totalReviews * 100) || 0,
-      server: Math.round((issueTypes.server || 0) / totalReviews * 100) || 0,
-      both: Math.round((issueTypes.both || 0) / totalReviews * 100) || 0,
+      client: totalReviews ? Math.round((issueTypes.client || 0) / totalReviews * 100) : 0,
+      server: totalReviews ? Math.round((issueTypes.server || 0) / totalReviews * 100) : 0,
+      both: totalReviews ? Math.round((issueTypes.both || 0) / totalReviews * 100) : 0,
     };
 
     // Calculate conflicting mods
     const conflictingMods = modReviews.reduce((acc: any, review: any) => {
-      review.conflictingMods.forEach((mod: string) => {
-        acc[mod] = (acc[mod] || 0) + 1;
-      });
+      if (review && Array.isArray(review.conflictingMods)) {
+        review.conflictingMods.forEach((mod: string) => {
+          acc[mod] = (acc[mod] || 0) + 1;
+        });
+      }
       return acc;
     }, {});
 
@@ -77,9 +99,20 @@ export async function GET(
       }
     });
   } catch (error: any) {
-    console.error('Error fetching mod:', error);
+    // Log detallado
+    console.error('[GET] Error al obtener el mod:', {
+      message: error?.message,
+      stack: error?.stack,
+      params,
+    });
+
+    // En desarrollo, puedes enviar el error completo. En producción, solo el mensaje.
+    const isDev = process.env.NODE_ENV !== 'production';
     return NextResponse.json(
-      { error: 'Error al obtener el mod' },
+      {
+        error: 'Error al obtener el mod',
+        ...(isDev && { details: error?.message || error?.toString() }),
+      },
       { status: 500 }
     );
   }

@@ -6,7 +6,9 @@
     "target": "ESNext",
     "outDir": "dist",
     "esModuleInterop": true
+    
   },
   "include": ["./**/*"],
   "exclude": ["node_modules"]
+  
 }

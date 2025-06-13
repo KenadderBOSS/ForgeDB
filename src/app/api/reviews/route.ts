@@ -5,6 +5,7 @@ import { getServerSession } from 'next-auth';
 
 const reviewsFilePath = path.join(process.cwd(), 'data', 'reviews.json');
 const modsFilePath = path.join(process.cwd(), 'data', 'mods.json');
+const usersFilePath = path.join(process.cwd(), 'data', 'users.json');
 
 async function readReviewsFile() {
   try {
@@ -20,6 +21,15 @@ async function readReviewsFile() {
 async function readModsFile() {
   try {
     const data = await fs.readFile(modsFilePath, 'utf-8');
+    return JSON.parse(data);
+  } catch (error) {
+    return [];
+  }
+}
+
+async function readUsersFile() {
+  try {
+    const data = await fs.readFile(usersFilePath, 'utf-8');
     return JSON.parse(data);
   } catch (error) {
     return [];
@@ -45,7 +55,7 @@ async function updateModStats(modId: string) {
 export async function GET(request: Request) {
   try {
     const session = await getServerSession();
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
@@ -66,7 +76,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession();
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
@@ -91,14 +101,17 @@ export async function POST(request: Request) {
       );
     }
 
+    const users = await readUsersFile();
+    const currentUser = users.find((u: any) => u.email === session.user.email);
+
     const newReview = {
       id: Date.now().toString(),
       modId,
       modName,
       userId: session.user.id,
       user: {
-        name: session.user.name,
-        avatar: session.user.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${session.user.id}`,
+        name: currentUser?.name || session.user.name || "Usuario",
+        avatar: currentUser?.avatar || session.user.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${session.user.id}`,
         badges: [],
         reviewCount: 1,
       },

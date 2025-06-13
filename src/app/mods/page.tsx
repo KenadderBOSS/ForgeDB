@@ -16,6 +16,38 @@ export default function ModsPage() {
   const [mods, setMods] = useState<Mod[]>([])
   const [fetchError, setFetchError] = useState("")
   const [loadingMods, setLoadingMods] = useState(true)
+  useEffect(() => {
+  let isMounted = true
+
+  const fetchMods = async () => {
+    try {
+      const response = await fetch("/api/mods")
+      if (!response.ok) {
+        throw new Error("Error al obtener los mods.")
+      }
+      const data = await response.json()
+
+      // DEBUG: Mostrar los datos recibidos
+      console.log("Mods recibidos del backend:", data.mods)
+
+      if (isMounted) {
+        setMods(data.mods)
+        setLoadingMods(false)
+      }
+    } catch (error: any) {
+      if (isMounted) {
+        setFetchError(error.message || "Error al cargar mods.")
+        setLoadingMods(false)
+      }
+    }
+  }
+
+  fetchMods()
+
+  return () => {
+    isMounted = false
+  }
+}, [])
 
   // Fetch mods from API on component mount
   useEffect(() => {

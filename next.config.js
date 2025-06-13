@@ -37,6 +37,14 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'konachan.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'img4.gelbooru.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.imgur.com',
+      },
     ],
   },
   typescript: {
